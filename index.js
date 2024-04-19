@@ -100,26 +100,26 @@ const ruleSets = [
   ],
 
   // LISTS
-  //     [
-  //         // UNORDERED LIST
-  //         {
-  //             //   regex: /^(\*|\-)\s(\w.+)/gm,
-  //       type: MD_Types.LIST_UL,
-  //       regex: /(^(\*|\-)\s(\w.+))/gm,
-  //       template: (listBody) => `<ul>
-  //           ${listBody}
-  //           </ul>`,
-  //     },
+      [
+          // UNORDERED LIST
+          {
+              //   regex: /^(\*|\-)\s(\w.+)/gm,
+        type: MD_Types.LIST_UL,
+        regex: /^(?:[\*\-\+]\s+.+\n?)+/gm,
+        template: (listBody) => `<ul>
+            ${listBody}
+            </ul>`,
+      },
 
-  //     // ORDERED LIST
-  //     {
-  //       type: MD_Types.LIST_OL,
-  //       regex: /^(\d\.)\s(\w.+)/gm,
-  //       template: (listBody) => `<ol>
-  //             ${listBody}
-  //             </ol>`,
-  //     },
-  //   ],
+      // ORDERED LIST
+      {
+        type: MD_Types.LIST_OL,
+        regex: /^(?:\d+\.\s+.+\n?)+/gm,
+        template: (listBody) => `<ol>
+              ${listBody}
+              </ol>`,
+      },
+    ],
 
   // IMAGE
   [
@@ -154,19 +154,37 @@ function parseMd(md) {
 
   ruleSets.forEach((ruleSet) => {
     ruleSet.forEach(({ regex, template, type }) => {
+          
       if (
         typeof template === "function" &&
-        (type === MD_Types.LIST_OL || type === MD_Types.LIST_UL)
+        type === MD_Types.LIST_UL
       ) {
         let matchedElements = html.match(regex) || [];
-        console.log(html);
-        let listBody = ``;
-        matchedElements.forEach((element) => {
+        
+        if(matchedElements[0]) {
+          let listBody = ``;
+          matchedElements[0].split("-").filter(el => el).forEach((element) => {
           console.log(listBody);
-          return (listBody += `<li>${element.substring(2)}</li>`);
+          (listBody += `<li>${element}</li>`);
         });
-
-        html = html.replace(regex, template(listBody));
+        
+          html = html.replace(regex, template(listBody));
+        }
+        
+        
+      } else if (typeof template === "function" && type == MD_Types.LIST_OL) {
+        
+        let matchedElements = html.match(regex) || [];
+        
+        if (matchedElements[0]) {
+          let listBody = ``;
+          matchedElements[0].split("\n").filter(el => el).forEach((element) => {
+            console.log(listBody);
+            (listBody += `<li>${element.substring(2)}</li>`);
+          });
+        
+          html = html.replace(regex, template(listBody));
+        }
       } else {
         html = html.replace(regex, template);
       }
