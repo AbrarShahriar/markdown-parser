@@ -1,13 +1,19 @@
 // @ts-nocheck
+mermaid.initialize({ startOnLoad: false });
 
 const MD_Types = {
   HEADER: "header",
-  TEXT_FORMATTING: "text_formatting",
+  TEXT_FORMATTING: {
+    BOLD: "bold",
+    ITALIC: "italic",
+    STRIKETHROUGH: "strikethrough",
+    HIHGLIGHT: "highlight",
+  },
   IMAGE: "image",
   LINK: "LINK",
   INDENTATION: "indentation",
-  LIST_UL: "list_ul",
-  LIST_OL: "list_ol",
+  LIST: { UL: "list_ul", OL: "list_ol" },
+  BLOCK: { QUOTE: "quote", CODE: "code" },
 };
 
 const el = {
@@ -16,9 +22,19 @@ const el = {
   renderBtn: document.querySelector(".render"),
 };
 
-el.renderBtn.addEventListener("click", () => {
+el.renderBtn.addEventListener("click", async () => {
   el.output.innerHTML = "";
   el.output.innerHTML = parseMd(el.input.value);
+
+  hljs.highlightAll();
+  renderMathInElement(el.output, {
+    delimiters: [
+      { left: "$$", right: "$$", display: true },
+      { left: "$", right: "$", display: false },
+    ],
+    throwOnError: false,
+  });
+  await mermaid.run();
 });
 
 const ruleSets = [
@@ -65,61 +81,73 @@ const ruleSets = [
     },
   ],
 
+  // BLOCKS
+  [
+    // BLOCKQUOTE
+    {
+      type: MD_Types.BLOCK.QUOTE,
+      regex: /^([\>]\s+.+\n?)+/gm,
+      template: (blockquoteBody) =>
+        `<blockquote>${blockquoteBody}</blockquote>`,
+    },
+    // CODEBLOCK
+    {
+      type: MD_Types.BLOCK.CODE,
+      regex: /\`\`\`(\w+){0,}?(?:\n([\s\S]*?)\n)\`\`\`/gm,
+      template: (lang, codeBody) =>
+        `<pre><code class="language-${lang}">${codeBody}</code></pre>`,
+    },
+  ],
+
   // TEXT FORMATTING
   [
     // BOLD
     {
-      type: MD_Types.TEXT_FORMATTING,
+      type: MD_Types.TEXT_FORMATTING.BOLD,
       regex: /(\*\*)([a-zA-z0-9\s]+)(\*\*)/gm,
       template: `<strong>$2</strong>`,
     },
     // ITALIC
     {
-      type: MD_Types.TEXT_FORMATTING,
+      type: MD_Types.TEXT_FORMATTING.ITALIC,
       regex: /(\_\_)([a-zA-z0-9\s]+)(\_\_)/gm,
       template: `<em>$2</em>`,
     },
     // STRIKETHROUGH
     {
-      type: MD_Types.TEXT_FORMATTING,
+      type: MD_Types.TEXT_FORMATTING.STRIKETHROUGH,
       regex: /(\~)([a-zA-z0-9\s]+)(\~)/gm,
       template: `<del>$2</del>`,
     },
     // HIGHLIGHT
     {
-      type: MD_Types.TEXT_FORMATTING,
+      type: MD_Types.TEXT_FORMATTING.HIHGLIGHT,
       regex: /(\#)([a-zA-z0-9\s]+)(\#)/gm,
       template: `<mark>$2</mark>`,
-    },
-    // BLOCKQUOTE
-    {
-      type: MD_Types.TEXT_FORMATTING,
-      regex: /^(\>)\s(.*)/gm,
-      template: `<blockquote>$2</blockquote>`,
     },
   ],
 
   // LISTS
-      [
-          // UNORDERED LIST
-          {
-              //   regex: /^(\*|\-)\s(\w.+)/gm,
-        type: MD_Types.LIST_UL,
-        regex: /^(?:[\*\-\+]\s+.+\n?)+/gm,
-        template: (listBody) => `<ul>
+  [
+    // UNORDERED LIST
+    {
+      //   regex: /^(\*|\-)\s(\w.+)/gm,
+      type: MD_Types.LIST.UL,
+      regex: /^(?:[\*\-\+]\s+.+\n?)+/gm,
+      template: (listBody) => `<ul>
             ${listBody}
             </ul>`,
-      },
+    },
 
-      // ORDERED LIST
-      {
-        type: MD_Types.LIST_OL,
-        regex: /^(?:\d+\.\s+.+\n?)+/gm,
-        template: (listBody) => `<ol>
+    // ORDERED LIST
+    {
+      type: MD_Types.LIST.OL,
+      regex: /^(?:\d+\.\s+.+\n?)+/gm,
+      template: (listBody) => `<ol>
               ${listBody}
               </ol>`,
-      },
-    ],
+    },
+  ],
 
   // IMAGE
   [
@@ -154,36 +182,79 @@ function parseMd(md) {
 
   ruleSets.forEach((ruleSet) => {
     ruleSet.forEach(({ regex, template, type }) => {
-          
-      if (
-        typeof template === "function" &&
-        type === MD_Types.LIST_UL
-      ) {
-        let matchedElements = html.match(regex) || [];
-        
-        if(matchedElements[0]) {
-          let listBody = ``;
-          matchedElements[0].split("-").filter(el => el).forEach((element) => {
-          console.log(listBody);
-          (listBody += `<li>${element}</li>`);
-        });
-        
-          html = html.replace(regex, template(listBody));
-        }
-        
-        
-      } else if (typeof template === "function" && type == MD_Types.LIST_OL) {
-        
-        let matchedElements = html.match(regex) || [];
-        
-        if (matchedElements[0]) {
-          let listBody = ``;
-          matchedElements[0].split("\n").filter(el => el).forEach((element) => {
-            console.log(listBody);
-            (listBody += `<li>${element.substring(2)}</li>`);
-          });
-        
-          html = html.replace(regex, template(listBody));
+      if (typeof template === "function") {
+        switch (type) {
+          case MD_Types.LIST.UL:
+            let matchedULElements = html.match(regex) || [];
+
+            matchedULElements.forEach((match) => {
+              let listBody = ``;
+              match
+                .split("-")
+                .filter((el) => el)
+                .forEach((element) => {
+                  listBody += `<li>${element}</li>`;
+                });
+
+              html = html.replace(match, template(listBody));
+            });
+
+            return;
+
+          case MD_Types.LIST.OL:
+            let matchedOLElements = html.match(regex) || [];
+
+            matchedOLElements.forEach((match) => {
+              let listBody = ``;
+              match
+                .split("\n")
+                .filter((el) => el)
+                .forEach((element) => {
+                  listBody += `<li>${element.substring(2)}</li>`;
+                });
+
+              html = html.replace(match, template(listBody));
+            });
+            return;
+
+          case MD_Types.BLOCK.QUOTE:
+            let matchedBlockQuote = html.match(regex) || [];
+            matchedBlockQuote.forEach((match) => {
+              let blockBody = "";
+              match
+                .split(">")
+                .filter((el) => el)
+                .forEach((element) => {
+                  blockBody += `${element}`;
+                });
+
+              html = html.replace(match, template(blockBody));
+            });
+            return;
+
+          case MD_Types.BLOCK.CODE:
+            let matchedCodeQuote = html.match(regex) || [];
+            matchedCodeQuote.forEach((match) => {
+              let blockBody = "";
+              let metadata = match.split("\n");
+
+              let lang = metadata[0].substring(3).trim();
+
+              metadata
+                .filter(
+                  (el, i) =>
+                    !(
+                      i == 0 || i == matchedCodeQuote[0].split("\n").length - 1
+                    ) && el
+                )
+                .forEach((el) => (blockBody += `${el}\r\n`));
+
+              html = html.replace(match, template(lang, blockBody));
+            });
+            return;
+
+          default:
+            return;
         }
       } else {
         html = html.replace(regex, template);
@@ -192,6 +263,5 @@ function parseMd(md) {
   });
 
   html = html.replace();
-
   return html;
 }
