@@ -13,8 +13,8 @@
 - [x] List
   - [x] Unordered
   - [x] Ordered
-- [] Media
+- [ ] Media
   - [x] Image
-  - [] Diagram (MermaidJS)
-- [] Indentation
+  - [ ] Diagram (MermaidJS)
+- [ ] Indentation
   - [x] Linebreak
