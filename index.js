@@ -9,7 +9,7 @@ const MD_Types = {
     STRIKETHROUGH: "strikethrough",
     HIHGLIGHT: "highlight",
   },
-  IMAGE: "image",
+  MEDIA: { IMAGE: "image" },
   LINK: "LINK",
   INDENTATION: "indentation",
   LIST: { UL: "list_ul", OL: "list_ol" },
@@ -152,7 +152,7 @@ const ruleSets = [
   // IMAGE
   [
     {
-      type: MD_Types.IMAGE,
+      type: MD_Types.MEDIA.IMAGE,
       regex: /(\!)(\[)+(.*)(\])(\()(.*)(\))/gm,
       template: `<img src="$6" alt="$3" />`,
     },
@@ -243,9 +243,7 @@ function parseMd(md) {
               metadata
                 .filter(
                   (el, i) =>
-                    !(
-                      i == 0 || i == matchedCodeQuote[0].split("\n").length - 1
-                    ) && el
+                    !(i == 0 || i == match.split("\n").length - 1) && el
                 )
                 .forEach((el) => (blockBody += `${el}\r\n`));
 
