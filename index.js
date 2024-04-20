@@ -9,9 +9,9 @@ const MD_Types = {
     STRIKETHROUGH: "strikethrough",
     HIHGLIGHT: "highlight",
   },
-  MEDIA: { IMAGE: "image" },
+  MEDIA: { IMAGE: "image", CHECKBOX: "checkbox" },
   LINK: "LINK",
-  INDENTATION: "indentation",
+  INDENTATION: { LINE_BREAK: "linebrake", TAB: "tab" },
   LIST: { UL: "list_ul", OL: "list_ol" },
   BLOCK: { QUOTE: "quote", CODE: "code" },
 };
@@ -24,6 +24,7 @@ const el = {
 
 el.renderBtn.addEventListener("click", async () => {
   el.output.innerHTML = "";
+
   el.output.innerHTML = parseMd(el.input.value);
 
   hljs.highlightAll();
@@ -149,12 +150,18 @@ const ruleSets = [
     },
   ],
 
-  // IMAGE
+  // MEDIA
   [
     {
       type: MD_Types.MEDIA.IMAGE,
       regex: /(\!)(\[)+(.*)(\])(\()(.*)(\))/gm,
       template: `<img src="$6" alt="$3" />`,
+    },
+    {
+      type: MD_Types.MEDIA.CHECKBOX,
+      regex: /\[([\s|x])\]/gm,
+      template: (checked) =>
+        `<input type="checkbox" disabled ${checked && "checked"} />`,
     },
   ],
 
@@ -169,9 +176,15 @@ const ruleSets = [
 
   // INDENTATION
   [
+    // {
+    //   type: MD_Types.INDENTATION.TAB,
+    //   regex: /^\_\_(.*)/gm,
+    //   template: (level, body) =>
+    //     `<div style="margin-left: ${level * 20}px">${body}</div>`,
+    // },
     {
-      type: MD_Types.INDENTATION,
-      regex: /\n/gm,
+      type: MD_Types.INDENTATION.LINE_BREAK,
+      regex: /\n\n/gm,
       template: `<br>`,
     },
   ],
@@ -190,13 +203,13 @@ function parseMd(md) {
             matchedULElements.forEach((match) => {
               let listBody = ``;
               match
-                .split("-")
-                .filter((el) => el)
+                .split("\n")
+                .filter((el) => el.trim())
                 .forEach((element) => {
-                  listBody += `<li>${element}</li>`;
+                  listBody += `<li>${element.substring(2)}</li>`;
                 });
 
-              html = html.replace(match, template(listBody));
+              html = html.replace(match, template(listBody) + "\n");
             });
 
             return;
@@ -247,7 +260,41 @@ function parseMd(md) {
                 )
                 .forEach((el) => (blockBody += `${el}\r\n`));
 
+              if (lang === "mermaid") {
+                html = html.replace(
+                  match,
+                  `<pre class="diagram mermaid">${blockBody}</pre>`
+                );
+                return;
+              } else if (lang === "table") {
+                html = html.replace(match, tableToHtml(blockBody));
+                return;
+              }
               html = html.replace(match, template(lang, blockBody));
+            });
+            return;
+
+          case MD_Types.MEDIA.CHECKBOX:
+            let matchedCheckboxes = html.match(regex) || [];
+            matchedCheckboxes.forEach((match) => {
+              let checked = match.substring(1, 2).trim();
+
+              html = html.replace(match, template(checked && checked));
+            });
+            return;
+
+          case MD_Types.INDENTATION.TAB:
+            const matchedTabElements = html.match(regex) || [];
+
+            matchedTabElements.forEach((match) => {
+              let level = match.lastIndexOf("_") + 1;
+
+              console.log(html);
+
+              html = html.replace(
+                match,
+                template(level, parseMd(match.substring(level)))
+              );
             });
             return;
 
@@ -263,3 +310,37 @@ function parseMd(md) {
   html = html.replace();
   return html;
 }
+
+const localCreateEl = (el) => document.createElement(el);
+
+const tableToHtml = (text = testData) => {
+  let textLineArr = text.split("\n").filter((el) => el);
+
+  const table = localCreateEl("table");
+
+  table.classList.add("ttable");
+
+  textLineArr.forEach((line, lineNumber) => {
+    let tr = localCreateEl("tr");
+
+    let trData = line.split(",");
+
+    if (lineNumber == 0) {
+      trData.forEach((col) => {
+        let th = localCreateEl("th");
+        th.textContent = col.trim();
+        tr.append(th);
+      });
+    } else {
+      trData.forEach((col) => {
+        let td = localCreateEl("td");
+        td.textContent = col.trim();
+        tr.append(td);
+      });
+    }
+
+    table.append(tr);
+  });
+
+  return table.outerHTML;
+};

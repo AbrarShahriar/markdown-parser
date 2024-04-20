@@ -37,6 +37,11 @@
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
 
     <style>
+      :root {
+        --left-panel-background: lightgray;
+        ---background: gray;
+      }
+
       * {
         padding: 0;
         margin: 0;
@@ -60,11 +65,43 @@
         padding-left: 10px;
         margin: 0 0 0 20px;
       }
+
+      .diagram {
+        display: flex;
+        justify-content: center;
+      }
+
+      .ttable {
+        width: 100%;
+        font-size: 14px;
+        /* border-collapse: collapse; */
+        border: 1px solid var(--left-panel-background);
+        text-align: center;
+      }
+
+      .ttable td,
+      .ttable th {
+        padding: 10px;
+        border: none;
+      }
+
+      .ttable tr {
+        border: none;
+      }
+
+      .ttable tr:nth-child(odd) {
+        background-color: var(--left-panel-background);
+      }
+
+      .ttable tr:nth-child(even) {
+        background-color: var(---background);
+      }
     </style>
   </head>
   <body>
     <textarea class="input" cols="80" rows="10"></textarea>
     <button class="render">Render</button>
+    <button class="share">share</button>
     <div class="output"></div>
     <script src="index.js"></script>
   </body>
