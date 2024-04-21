@@ -7,7 +7,8 @@ const MD_Types = {
     BOLD: "bold",
     ITALIC: "italic",
     STRIKETHROUGH: "strikethrough",
-    HIHGLIGHT: "highlight",
+    HIGHLIGHT: "highlight",
+    UNDERLINE: "underline",
   },
   MEDIA: { IMAGE: "image", CHECKBOX: "checkbox" },
   LINK: "LINK",
@@ -105,13 +106,13 @@ const ruleSets = [
     // BOLD
     {
       type: MD_Types.TEXT_FORMATTING.BOLD,
-      regex: /(?:\*\*)(?<! )(\S(.*?))(?! )(?:\*\*)/gm,
+      regex: /(?:\*)(?<! )(\S(.*?))(?! )(?:\*)/gm,
       template: `<strong>$1</strong>`,
     },
     // ITALIC
     {
       type: MD_Types.TEXT_FORMATTING.ITALIC,
-      regex: /(?:\_\_)(?<! )(\S(.*?))(?! )(?:\_\_)/gm,
+      regex: /(?:\%)(?<! )(\S(.*?))(?! )(?:\%)/gm,
       template: `<em>$1</em>`,
     },
     // STRIKETHROUGH
@@ -122,9 +123,15 @@ const ruleSets = [
     },
     // HIGHLIGHT
     {
-      type: MD_Types.TEXT_FORMATTING.HIHGLIGHT,
+      type: MD_Types.TEXT_FORMATTING.HIGHLIGHT,
       regex: /(?:\#)(?<! )(\S(.*?))(?! )(?:\#)/gm,
       template: `<mark>$1</mark>`,
+    },
+    // UNDERLINE
+    {
+      type: MD_Types.TEXT_FORMATTING.UNDERLINE,
+      regex: /(?:\_)(?<! )(\S(.*?))(?! )(?:\_)/gm,
+      template: `<u>$1</u>`,
     },
   ],
 
@@ -135,18 +142,14 @@ const ruleSets = [
       //   regex: /^(\*|\-)\s(\w.+)/gm,
       type: MD_Types.LIST.UL,
       regex: /^(?:[\*\-\+]\s+.+\n?)+/gm,
-      template: (listBody) => `<ul>
-            ${listBody}
-            </ul>`,
+      template: (listBody) => "<ul>" + listBody + "</ul>",
     },
 
     // ORDERED LIST
     {
       type: MD_Types.LIST.OL,
       regex: /^(?:\d+\.\s+.+\n?)+/gm,
-      template: (listBody) => `<ol>
-              ${listBody}
-              </ol>`,
+      template: (listBody) => "<ol>" + listBody + "</ol>",
     },
   ],
 
