@@ -105,26 +105,26 @@ const ruleSets = [
     // BOLD
     {
       type: MD_Types.TEXT_FORMATTING.BOLD,
-      regex: /(\*\*)([a-zA-z0-9\s]+)(\*\*)/gm,
-      template: `<strong>$2</strong>`,
+      regex: /(?:\*\*)(?<! )(\S(.*?))(?! )(?:\*\*)/gm,
+      template: `<strong>$1</strong>`,
     },
     // ITALIC
     {
       type: MD_Types.TEXT_FORMATTING.ITALIC,
-      regex: /(\_\_)([a-zA-z0-9\s]+)(\_\_)/gm,
-      template: `<em>$2</em>`,
+      regex: /(?:\_\_)(?<! )(\S(.*?))(?! )(?:\_\_)/gm,
+      template: `<em>$1</em>`,
     },
     // STRIKETHROUGH
     {
       type: MD_Types.TEXT_FORMATTING.STRIKETHROUGH,
-      regex: /(\~)([a-zA-z0-9\s]+)(\~)/gm,
-      template: `<del>$2</del>`,
+      regex: /(?:\~)(?<! )(\S(.*?))(?! )(?:\~)/gm,
+      template: `<del>$1</del>`,
     },
     // HIGHLIGHT
     {
       type: MD_Types.TEXT_FORMATTING.HIHGLIGHT,
-      regex: /(\#)([a-zA-z0-9\s]+)(\#)/gm,
-      template: `<mark>$2</mark>`,
+      regex: /(?:\#)(?<! )(\S(.*?))(?! )(?:\#)/gm,
+      template: `<mark>$1</mark>`,
     },
   ],
 
@@ -182,11 +182,11 @@ const ruleSets = [
     //   template: (level, body) =>
     //     `<div style="margin-left: ${level * 20}px">${body}</div>`,
     // },
-    {
-      type: MD_Types.INDENTATION.LINE_BREAK,
-      regex: /\n\n/gm,
-      template: `<br>`,
-    },
+    // {
+    //   type: MD_Types.INDENTATION.LINE_BREAK,
+    //   regex: /\n/gm,
+    //   template: `<br>`,
+    // },
   ],
 ];
 

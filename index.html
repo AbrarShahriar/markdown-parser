@@ -49,7 +49,7 @@
       }
 
       textarea {
-        margin: 10px;
+        width: 100%;
       }
 
       img {
@@ -99,10 +99,19 @@
     </style>
   </head>
   <body>
-    <textarea class="input" cols="80" rows="10"></textarea>
+    [Memory|
+    [Semantic]
+    [Episodic]
+    [Procedural]
+    ] -> [Working Memory]
+    [Observation] -> [Working Memory]
+    [Working Memory] -> [Decision Making]
+    [Decision Making] -> [Task/Action]
+    <textarea class="input" cols="80" rows="10">
+    </textarea>
     <button class="render">Render</button>
     <button class="share">share</button>
-    <div class="output"></div>
+    <pre class="output"></pre>
     <script src="index.js"></script>
   </body>
 </html>
